@@ -1,5 +1,13 @@
 Revision history for Nes
 
+        2010/02/25
+        add -u option in set_nes_site for solves some Linux distributions 
+        are problems with symbolic in cgi-bin.
+
+1.00_02 2010/02/25 
+        Add iprefix option in set_nes_site.
+        Several install fixes.
+
 1.00_01 2010/02/23 
         Multiples changes in structure of directory and others for CPAN
         installation, not compatible with earlier versions.
