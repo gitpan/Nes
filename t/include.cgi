@@ -12,19 +12,17 @@
 #  Repository:
 #  http://github.com/Skriptke/nes
 # 
-#  Version 1.00
+#  Version 1.00_01
 #
 # -----------------------------------------------------------------------------
 
   use strict;
   use Nes;
   
-  my $nes = Nes::Singleton->new('./t/test.nhtml');
+  my $nes = Nes::Singleton->new('./t/include.nhtml');
   
-  my $nes_tags = {};
-  
-  $nes_tags->{'test'} = 'Testing Nes Templates';
+  $nes->out();
 
-  $nes->out(%$nes_tags);
 
 1;
+
