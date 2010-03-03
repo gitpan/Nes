@@ -23,6 +23,16 @@ Nes can do for you?
 With Nes can do the same or more than any other template system, only 
 much faster and easier. The time is the most valuable resource. 
 
+With Nes you can NOT:
+
+- Embed Perl code in the template.
+
+- Modify aplication data from the template.
+
+- Emulating an interpreter or language in the template.
+
+To do these things, there is already a system called PHP. :-)
+
 =head2 Some Nes features
 
 =over 2
@@ -183,6 +193,38 @@ cgi_dir option of the set_nes_site utility, create a file like this:
     </FilesMatch>
     #---------------------------------------------
 
+=head1 HTML oriented
+
+Usually the procedure for using a template would be:
+
+    Template->new('template');
+
+The Perl script calls the template.
+
+In Nes, template calls to Perl script:
+
+    {: NES 1.0 ('script.pl') :}
+    <html>
+    ...
+
+Usually the procedure for output a template would be:
+
+    Template->out;
+
+The Perl script handles the output.
+
+In Nes, template handles the output.
+
+Usually must call many methods to manage the template.
+
+In Nes, no need to call more than one or two methods, and in many 
+cases none:
+
+    {: NES 1.0 none :}
+    { # no Perl script requires :}
+    <html>
+    ...
+
 =head1 Very easy to use
 
 Extremely simple, in most cases you just need to do this:
@@ -335,6 +377,39 @@ defined in our Perl script, of not being the block is replaced by an empty strin
 
 The block is replaced by the value of environment_variable which is an 
 environment variable Nes.
+
+Nes defined all CGI environment as:
+
+    {: * env_SERVER_NAME :} 
+    {: * env_DOCUMENT_ROOT :} 
+    etc...
+
+All parameters passed in the GET and POST methods, add 'q_' at the 
+beginning of the name of the variable:
+
+    {: * q_varname :}
+
+The varibles in the configuration file as:
+
+    {: * cfg_varname :}
+
+Other:
+
+Current Directory:
+
+    {: * nes_this_dir :}
+
+Current file:
+
+    {: * nes_this_file :}
+
+NES version:
+
+    {: * nes_ver :}
+
+Language:
+
+    {: * nes_accept_language :}
 
 =head2 ~ Expression
 
