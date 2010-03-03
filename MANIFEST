@@ -6,7 +6,10 @@ README
 script/set_nes_site
 lib/Nes.pod
 lib/Nes.pm
+lib/Nes/Tutorial.pod
+lib/Nes/nes.cfg.pod
 lib/Nes/Singleton.pm
+lib/Nes/Singleton.pod
 lib/Nes/Setting.pm
 lib/Nes/Minimal.pm
 lib/Nes/DB.pm
@@ -47,6 +50,7 @@ share/examples/nesblog/en/items/Help.html
 share/examples/nesblog/en/items/Beginning.html
 share/examples/nesblog/en/items/Installation.html
 'share/examples/nesblog/en/items/Nes configuration file.html'
+share/examples/nesblog/en/items/Tutorial.html
 share/examples/nesblog/en/index.html
 share/examples/nesblog/en/latest.html
 share/examples/nesblog/en/source.html
@@ -63,6 +67,9 @@ share/examples/nesblog/es/article_index.html
 share/examples/nesblog/es/latest_comments.nsql
 share/examples/nesblog/es/show_source.html
 share/examples/nesblog/es/items/Nes-1.00.html
+share/examples/nesblog/en/items/Sessions.html
+share/examples/nesblog/en/items/Security.html
+'share/examples/nesblog/en/items/HTTP Headers.html'
 'share/examples/nesblog/es/items/Logo de nes.html'
 'share/examples/nesblog/es/items/Tag ~ (expresión).html'
 share/examples/nesblog/es/items/Colabora.html
@@ -145,3 +152,25 @@ share/cgi-bin/obj/lwp_custom.nhtml
 share/cgi-bin/obj/location.pl
 share/cgi-bin/obj/location.nhtml
 share/cgi-bin/obj/session.nhtml
+share/examples/tutorial/.htaccess
+share/examples/tutorial/index.html
+share/examples/tutorial/lucky_01.nhtml
+share/examples/tutorial/lucky_01.pl
+share/examples/tutorial/lucky_02.nhtml
+share/examples/tutorial/lucky.nhtml
+share/examples/tutorial/lucky.pl
+share/examples/tutorial/lucky_test.nhtml
+share/examples/tutorial/nes_01.nhtml
+share/examples/tutorial/nes_02.nhtml
+share/examples/tutorial/nes_03.nhtml
+share/examples/tutorial/nes_05.nhtml
+share/examples/tutorial/nes_06.nhtml
+share/examples/tutorial/nes_07.nhtml
+share/examples/tutorial/nes_08.nhtml
+share/examples/tutorial/nes_09.nhtml
+share/examples/tutorial/nes_10.nhtml
+share/examples/tutorial/.nes.cfg
+share/examples/tutorial/script_02.pl
+share/examples/tutorial/script_03.pl
+share/examples/tutorial/script_07.pl
+share/examples/tutorial/template.nhtml

@@ -90,8 +90,10 @@ for your script.
 
     use Nes;
     my = Nes::Singleton->new('template.nhtml');
+
     my $nes_tags = {};
     $nes_tags->{'var_hello'} = 'Hello World!';
+
     $nes->out(%$nes_tag);  
 
 =head2 Nes template Sample
@@ -108,9 +110,9 @@ for your script.
 
 =head2 More samples
 
-Sample to use Nes; L<http://nes.sourceforge.net/>
+See L<Nes::Tutorial>
 
-Repository L<http://github.com/Skriptke/nes>
+Sample to use Nes; L<http://nes.sourceforge.net/>
 
 =head1 CONFIGURATION
 
@@ -160,183 +162,98 @@ More help:
 
 =head2 Nes templates .htaccess configuration
 
+cgi_dir option of the set_nes_site utility, create a file like this:
+
+    # ---------- Nes configuration --------------
+    # exec cgis
+    Options +ExecCGI
+    AddHandler cgi-script .cgi .pl
+
+    # Nes nhtml files
     AddHandler perl-nes .nhtml
     AddHandler perl-nes .nhtm
-    
+
+    # nes dispatcher
     Action perl-nes /cgi-bin/nes/dispatch.cgi
-    
+
+    # protected Nes configuration and other files
     <FilesMatch \.(nsql|nes.cfg)$>
       order deny,allow
       deny from all
     </FilesMatch>
+    #---------------------------------------------
 
-=head1 .nes.cfg configuration files
+=head1 Very easy to use
 
-The .nes.cfg is placed in the directory where you installed your 
-nhtml templates, it overwrites Setting and the plugins configuration.
-Level rises, until the root directory of the Web, to read .nes.cfg files.  
-
-private_key value that is used to encrypt data, if not changed the script
-to launch a warning each time you run Nes.
-
-=head2 .nes.cfg variables
-
-    tmp_dir        # Temporary directory.
-    tmp_suffix     # Suffix of the temporary files. 
-    tmp_clear      # If delete the temporary files or 0 and does not delete
-                   # time suffix: s: seconds,
-                   # m: minutes h: hours d: days, M: months, y: years
-                   # 24h is 24 hours. 
-    top_dir        # Root directory of your site.
-    nes_dir        # Directory of Nes.
-    nes_top_dir    # Absolute path to the Nes directory.
-    plugin_dir     # Directory of the Plugin, top_dir relative.
-    obj_dir        # Directory of the Object, top_dir relative.
-    plugin_top_dir # Absolute path to the Plugin directory.
-    obj_top_dir    # Absolute path to the Object directory.
-    time_zone      # *** unimplemented ***
-    locale         # locale, ej.: es_ES.utf8
-    session_prefix # Name cookie used for user session.
-    private_key    # Private key used to encrypt data.
-    DB_base        # Database name.
-    DB_user        # Database user.
-    DB_pass        # Database password.
-    DB_driver      # Database driver, default 'mysql' 
-    DB_host        # Database host, default 'localhost'
-    DB_port        # Database port, default '3306' 
-    php_cline      # Command line for PHP CLI
-    php_cgi_cline  # Command line for PHP CGI
-    perl_cline     # Command line for Perl
-    shell_cline    # Command line for Shell
-    python_cline   # Command line for Python
-    max_post       # Max kB. maximum size of POST.
-    max_upload     # Max kB. maximum size of the upload, 0 none
-    tmp_upload     # In big upload, memory consumption is high,
-                   # this defined from that kB. using a temporary
-                   # file in the upload, preventing these are 
-                   # loaded into memory.
-    # Plugins list separated by commas to load at startup only
-    # for the file in the URL, in all nhtml directory, eg.:
-    auto_load_plugin_top_first
-    # Plugins list separated by commas to load at startup to
-    # all files included in all nhtml directory, eg.:
-    auto_load_plugin_all_first
-    # Plugins list separated by commas to load at end only
-    # for the file in the URL, in all nhtml directory, eg.:
-    auto_load_plugin_top_last
-    # Plugins list separated by commas to load at end to
-    # all files included in all nhtml directory, eg.:
-    auto_load_plugin_all_last
-
-=head2 Use in your script
-
-You can use .nes.cfg to add configuration variables to your script. We 
-recommend using a notation that clearly distinguishes Nes variables, 
-for example using prefixes the name of your application:
-
-    .nes.cfg
-        private_key = pass3
-        myscript_var1 = 50
-        myscript_var2 = 60  
-        myscript_var3 = 70
-
-You can access these variables from the nhtml template as:
-
- {: * cfg_myscript_var1 :}
-
-And from Perl:
+Extremely simple, in most cases you just need to do this:
 
     use Nes;
-    my $nes    = Nes::Singleton->new();
-    my $config = $nes->{'CFG'};
-    my $var1   = $config->{'myscript_var1'};
+    my $nes = Nes::Singleton->new('template.nhtml');
+    my %tags;
 
-=head2 Perl syntax in the value
+    # the things that make your script...
+    ...
 
-In the predefined variables, Nes detects the data type automatically:
+    # set variables for output
+    $tags{'var_hello'} = 'Hello World!';
 
-    # Is scalar
-    tmp_dir = /tmp/nes
+    # the things that make your script...
+    ...
 
-    # It is an array, separated by commas
-    auto_load_plugin_top_first = plugin1.pl, plugin1.pl
-
-If we define our own variables with a particular data type:
-
-    # Scalar, using Perl syntax in the value.
-    myscript_var1 $= 'scalar'
-
-    # Hash
-    myscript_var2 %= ( 'name' => 'Jason', 'email' => 'jason\@example.com' )
-
-    # Array
-    myscript_var3 @= ( 'one', 'two', 'three' )
-
-We may also use Perl syntax for variables in the predefined value,
-taking care not to change the type:
-
-    # scalar
-    tmp_dir $= '/tmp/nes'
-
-    # It is an array, ERROR
-    tmp_dir %= '/tmp/nes'
-
-    # Array, separated by commas
-    auto_load_plugin_top_first = plugin1.pl, plugin2.pl
-
-    # Array, Perl syntax
-    auto_load_plugin_top_first @= ( 'plugin1.pl', 'plugin2.pl' )
-
-In the predefined variables are all scalar except those allowed 
-are comma-separated arrays. If we arrays can be useful if one 
-of the values has a coma, or the scalar to define a space:
-
-    # we can not take as value a space like this:
-    myscript_var1 = ' '  <- error, value is the literal, including quotation 
-    myscript_var1 =      <- error, no value
-
-    # to give as value a space can do so:
-    myscript_var1 $= ' ' 
-
-    # Array, the name includes a comma
-    auto_load_plugin_top_first = plugin,1.pl, plugin,2.pl <- error
-
-    # Array, Perl syntax the name includes a comma
-    auto_load_plugin_top_first @= ( 'plugin,1.pl', 'plugin,2.pl' )
-
-Each variable can only occupy one line.
-
-=head1 Singleton class
-
-Is a singleton type object, return the new object or instance of this if is 
-created previously.
-
-    Nes::Singleton->new('template.nhtml'); # returns a new instance
-    Nes::Singleton->new('other.nhtml');    # returns same instance
-    Nes::Singleton->new();                 # returns same instance
-
-Only require parameter if Nes is executed by CGI.
-
-    http://example.con/perl.cgi
-
-The parameter is ignored if executed Nes by template.
-
-    http://example.con/template.nhtml
-
-The CGI method only is provided for debug.
-
-Singleton provides a single method: out. In the parameter we pass a copy of an 
-associative array (%$hash) with the data we want to replace in the template.
-
-    my $nes_tags = {};
-    $nes_tags->{'hello'} = 'Hello World!';
+    # send variables to Nes
     $nes->out(%$nes_tag);
-    
-    ./.
-    
-    my %nes_tags;
-    $nes_tags{'hello'} = 'Hello World!';
-    $nes->out(%nes_tag);
+
+And in case you want to use user session? 
+
+Too. Only in special cases need access Nes::Singleton,
+consider this example:
+
+    {: NES 1.0 ('index.cgi') :}
+    <html>
+        ...
+        {: ~ *nes_session_ok
+            {: include ('user_register.nhtml') :}
+        :}
+        ...
+    </html>
+
+The perl script required is:
+
+    none! :-) easy?
+
+For this case we can rewrite the template as follows:
+
+    {: NES 1.0 none :}
+    <html>
+        ...
+        {: ~ *nes_session_ok
+            {: include ('user_register.nhtml') :}
+        :}
+        ...
+    </html>
+
+So to create the session:
+
+    {: NES 1.0 none :}
+    <html>
+        ...
+        {: ~ $login_ok
+          {: include ( '{: * cfg_obj_top_dir :}/session.nhtml',
+                       'create',  
+                       '{: * q_user :}',
+                       '30m'
+                     )
+          :}
+        :}
+        ...
+    </html>
+
+* In this example we assumed that there is a form that gives value 
+{: * q_user :} or/and an object that defines Nes {: $ login_ok :}
+
+Nes is oriented at HTML and not the Perl code.
+
+See: L<Nes::Singleton>
 
 =head1 Syntax Nes
 
@@ -380,7 +297,7 @@ The four forms have the same meaning.
 
 Parentheses are not required provided there are no spaces between the parameters:
 
-    {: ~ $ variable <p> HTML code </p> :}                   <- * unnecessary 
+    {: ~ $variable <p> HTML code </p> :}                   <- * unnecessary 
     {: ~ ($ variable1 == $ variable2) <p> HTML code </p> :} <- * required 
 
 Use quotation marks and commas in the parameters:
@@ -670,6 +587,136 @@ Out:
     Extrac:
     Test Page - Sample to use Nes;
 
+=head1 HTTP-headers
+
+With the HTTP-headers variable we have to define in our Perl script:
+
+    use Nes;
+    my $nes      = Nes::Singleton->new('template.nhtml');
+    my $nes_tags = {};
+
+    $nes_tags->{'HTTP-headers'} = "Content-type: text/html\n\n";
+
+    $nes->out(%$nes_tags);
+
+We can control the headers of the HTML output.
+
+When Nes verifies that HTTP-headers has value, prints its content and not
+the headers by default. Should be included immediately after the NES Tag:
+
+    {: NES 1.0 ('file.pl') :}
+    {: $ HTTP-headers :}
+
+If you define HTTP-headers and then not included with 
+{: $ HTTP-headers :} we get an error. 
+
+=head1 Security
+
+=head2 Code Injection and Cross-site scripting
+
+Nes transparently manages the removal of malicious code variables.
+
+By default is filtered HTML and the tags Nes all environment variables 
+(*) from forms.
+
+By default is filtered HTML and the tags of all the variables Nes ($).
+
+By default is filtered HTML and the tags Nes all the variables of Tables 
+and SQL (@$).
+
+By default HTML is allowed <br> HTML Tag.
+
+By default, calls DBI::quote on all variables that are part of a SELECT 
+statement in sql Tag
+
+=head2 Change the default behavior
+
+The types of variables x, $ y @$ accept parameters to change this behavior:
+
+    {: $  ('var','yes_html','no_sql') :}
+    {: *  ('q_var','yes_html','no_sql') :}
+    {: @$ ('table.field','yes_html','no_sql') :}
+
+We passed as parameters the filtering options you want, and are:
+
+    no_sql   # not allow SQL, call DBI::quote
+    no_html  # not allow Tag HTML
+    no_br    # not allow Tag HTML <br>
+    no_nes   # not allow Tag Nes {: :}
+    yes_sql  # allow SQL, not DBI::quote filter 
+    yes_html # allow all Tags HTML
+    yes_br   # allow Tag HTML <br>
+    yes_nes  # allow Tag Nes {: :}
+
+Allow specific HTML tags ( yes_tag_TAG ):
+
+    yes_tag_B      # allow Tag HTML <B></B>
+    yes_tag_STRONG # allow Tag HTML <strong></strong>
+    ...
+
+Format:
+
+    {: $  ('var',[list of options in any order]) :}
+
+=head2 Nes Tags
+
+If we make a variable 'yes_nes' will not get run code that contains the
+variable. For safety, you can not execute code from a Nes variable. 
+The effect of 'no_nes' is that the tags are visible, and 'yes_nes' 
+is disappearing.
+
+=head2 .nes.cfg
+
+We must prevent access to these files in .htaccess:
+
+     <FilesMatch \.nes.cfg$>
+        order deny,allow
+        deny from all
+     </FilesMatch>
+
+=head2 PHP
+
+Nes filters the Nes Tags of the forms in PHP include or Wrapper, but 
+NOT the HTML and SQL. It is assumed that the PHP script should 
+incorporate these filters. 
+
+=head1 Sessions
+
+We can managing user sessions with Objects or Perl script.
+
+=head2 Object session.nhtml
+
+Managing user sessions with the object session.nhtml:
+
+  {: include ( '{: * cfg_obj_top_dir :}/session.nhtml',
+               action,  {: # default: get | create | del :}
+               user,    {: # if 'get' action: user :}
+               expire   {: # if 'get' action: expire :}
+  :}
+
+  Expire format:
+    time suffix: s: seconds, m: minutes h: hours d: days, M: months, y: years
+    30s = 30 seconds
+    12h = 12 hours
+    2y  = 2 years
+    ...
+
+=head2 Sessions in Perl script
+
+See: L<Nes::Singleton>
+
+=head2 Nes Environment Variables
+
+    # Session is open
+    {: * nes_session_ok :}
+    
+    # User name session
+    {: * nes_session_user :}
+
+=head1 SEE
+
+L<Nes::Tutorial>, L<Nes::Singleton>, L<Nes::nes.cfg>
+
 =head1 BUGS
 
 
@@ -680,7 +727,7 @@ Out:
 
 =head1 AUTHOR
 
-Skriptke: Enrique F. Castañón
+Skriptke: Enrique F. Castanon
 
 =head1 VERSION
 
@@ -688,7 +735,7 @@ Version 1.00 Febrero 2010
 
 =head1 COPYRIGHT
 
-Copyright (c) Enrique F. Castañón Barbero. All rights reserved.
+Copyright (c) Enrique F. Castanon Barbero. All rights reserved.
 
 =head1 LICENSE
 
@@ -722,10 +769,9 @@ POSSIBILITY OF SUCH DAMAGE
 
 =head1 SEE ALSO
 
-L<Template::Toolkit>, L<HTML::Template>, L<HTML::Mason>, L<HCKit::Template>, 
-L<Catalyst>, L<CGI::Framework>, L<CGI::Application>, 
-L<CGI::Application::Framework>, L<mod_perl>
-
+L<Template::Toolkit>, L<HTML::Template>, L<HTML::Mason>, 
+L<HCKit::Template>, L<Catalyst>, L<CGI::Framework>, 
+L<CGI::Application>, L<CGI::Application::Framework>, L<mod_perl>
 
 =cut
 

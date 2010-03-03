@@ -26,7 +26,7 @@ use strict;
 # cgi environment no defined in command line
 no warnings 'uninitialized';
 
-our $VERSION          = '1.01';
+our $VERSION          = '1.01.1_01';
 our $CRLF             = "\015\012";
 our $MAX_INTERACTIONS = 500;
 our $MOD_PERL         = $ENV{'MOD_PERL'} || 0;
@@ -1849,6 +1849,8 @@ use Nes::Singleton;
     my $self  = shift;
     my ($value, @security_options) = @_;
 
+    return $value if $value =~ /^\d*$/;
+
     my $tmp_no_html = $self->{'security_options'}{'no_html'};
     my $tmp_no_nes  = $self->{'security_options'}{'no_nes'};
     my $tmp_no_br   = $self->{'security_options'}{'no_br'};
@@ -1911,7 +1913,7 @@ use Nes::Singleton;
   sub replace_var {
     my $self  = shift;
     my ($var, @security_options) = @_;
- 
+
     return $self->security( $self->{'tags'}{$var}, @security_options );
   }
 
