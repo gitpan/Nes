@@ -26,7 +26,7 @@ use strict;
 # cgi environment no defined in command line
 no warnings 'uninitialized';
 
-our $VERSION          = '1.02.5_1';
+our $VERSION          = '1.02.5_2';
 our $CRLF             = "\015\012";
 our $MAX_INTERACTIONS = 500;
 our $MOD_PERL         = $ENV{'MOD_PERL'} || 0;
@@ -1718,7 +1718,8 @@ use Nes::Singleton;
     print $self->{'cookies'}->out;
     print "X-Powered-By: $self->{'X-Powered-By'}\n";
 #    print "Status: $self->{'HTTP-status'}\n" if !$self->{'tags'}{'HTTP-headers'};
-    print $self->{'TAG_HTTP-headers'} || $self->{'Content-type'}."\n\n";
+#    print $self->{'TAG_HTTP-headers'} || $self->{'Content-type'}."\n\n";
+    print $self->{'HTTP-headers'}."\n\n" if !$self->{'TAG_HTTP-headers'};
     print $self->{'out'};
 
   }
