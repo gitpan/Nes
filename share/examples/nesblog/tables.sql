@@ -17,3 +17,18 @@ CREATE TABLE IF NOT EXISTS `comments` (
   KEY `article` (`article`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=35 ;
 
+--
+-- Estructura de tabla para la tabla `users`
+--
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) NOT NULL,
+  `password` char(41) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `email` varchar(70) NOT NULL,
+  `message` tinytext NOT NULL,
+  `role` varchar(15) NOT NULL,
+  `script` varchar(25) NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=18 ;

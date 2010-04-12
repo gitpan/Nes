@@ -3,55 +3,125 @@
 # -----------------------------------------------------------------------------
 #
 #  Nes by Skriptke
-#  Copyright 2009 - 2010 Enrique F. Castañón
+#  Copyright 2009 - 2010 Enrique F. Castañón Barbero
 #  Licensed under the GNU GPL.
+#
+#  CPAN:
+#  http://search.cpan.org/dist/Nes/
 #
 #  Sample:
 #  http://nes.sourceforge.net/
 #
 #  Repository:
 #  http://github.com/Skriptke/nes
-#
-#  CPAN:
-#  http://search.cpan.org/perldoc?Nes
 # 
-#  Version 1.00
+#  Version 1.03
 #
 #  index.cgi
 #
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 use Nes;
+my $nes       = Nes::Singleton->new();
+my $q         = $nes->{'query'}->{'q'};
+my $config    = $nes->{'CFG'};
+my $action    = $q->{'action'};
+my $item      = $q->{'item'};
+my $source    = $q->{'source'};
+my $nes_tags  = {};
 
-# Creamos un objeto de la clase Singleton
-my $nes = Nes::Singleton->new('../es/index.html');
+$nes_tags->{'HTTP-headers'}  = "Cache-control: max-age=0\n";
+$nes_tags->{'HTTP-headers'} .= "Cache-control: no-cache\n";
+$nes_tags->{'HTTP-headers'} .= "Expires: Mon, 1 Jan 1900 00:00:00 GMT\n";
+$nes_tags->{'HTTP-headers'} .= "Content-type: text/html; charset=utf-8\n\n";
 
-require 'lib.cgi';
+$nes_tags->{'item_name'}        = $item;
+$nes_tags->{'title'}            = 'Sample to use Nes; A powerful template system in Perl.';
+$nes_tags->{'header'}           = 'header.nhtml';
+$nes_tags->{'intro'}            = 'intro.nhtml';
+$nes_tags->{'comments'}         = 'comments.nhtml';
+$nes_tags->{'user_links'}       = 'user_links.nhtml';
+$nes_tags->{'top_articles'}     = 'top_articles.nhtml';
+$nes_tags->{'latest_articles'}  = 'latest_articles.nhtml';
+$nes_tags->{'latest_comments'}  = 'latest_comments.nhtml';
+$nes_tags->{'footer'}           = 'footer.nhtml';
 
-# archivo de configuración .nes.cfg
-my $config = $nes->{'CFG'};
+$nes_tags->{'show_comments'}    = 1;
+$nes_tags->{'show_right_panel'} = 1;
 
-# en %tags vamos a guardar los valores que posteriormente le pasaremos a 
-# $nes en el método out
-my $nes_tags = {};
+my $lang = $ENV{'PATH_INFO'};
+$lang =~ s/.*\/(..)\/[^\/]*/$1/;
+$nes_tags->{'lang'} = $lang;
 
-# El objeto {'query'} maneja los métodos POST y GET y la variable {'q'} contiene
-# los parametros de los métodos POST y GET de igual modo que el módulo CGI
-# Esto es similar a hacer my $q = CGI->new; y podemos seguir haciendolo así.
-# Aquí hemos asigando la variable en dos pasos como ejemplo se uso
-# pero podemos hacer directamente my $q = $nes->{'query'}->{'q'};
-my $query = $nes->{'query'};
-my $q     = $query->{'q'};
+if ( $action =~ /^login$/i ) {
+  
+  $nes_tags->{'show_comments'} = 0;
+  $nes_tags->{'title'}         = 'Login';
+  $nes_tags->{'content'}       = 'login.nhtml';
+  
+} elsif ( $action =~ /^logindb$/i ) {
+  
+  $nes_tags->{'show_comments'} = 0;
+  $nes_tags->{'title'}         = 'Login';
+  $nes_tags->{'content'}       = 'login_db.nhtml';
+  
+} elsif ( $action =~ /^register$/i ) {
+  
+  $nes_tags->{'show_comments'} = 0;
+  $nes_tags->{'title'}         = 'Register';
+  $nes_tags->{'content'}       = 'register.nhtml';
+  
+} elsif ( $action =~ /^remember$/i ) {
+  
+  $nes_tags->{'show_comments'} = 0;
+  $nes_tags->{'title'}         = 'Remember';  
+  $nes_tags->{'content'}       = 'remember.nhtml';
 
-# si ?item= no tiene valor mostramos el último artículo creado
-my $item_name = $q->{'item'} || last_article();
-my $file_name = $config->{'miniblog_item_dir'} . '/' . $item_name . '.html';
+} elsif ( $action =~ /^comment$/i ) {
+  
+  $nes_tags->{'show_comments'} = 1;
+  $nes_tags->{'title'}         = 'Add Commnet to: '.$item;   
+  $nes_tags->{'content'}       = 'add_comment.nhtml';
 
-$nes_tags->{'item_name'} = $item_name;
-$nes_tags->{'article'}   = $file_name;
+} elsif ( $action =~ /^index$/i ) {
+  
+  $nes_tags->{'show_comments'} = 1;
+  $nes_tags->{'title'}         = 'Article Index';     
+  $nes_tags->{'content'}       = 'article_index.nhtml';
 
-# por último mostramos la página pasandole los datos en el método out
+} elsif ( $action =~ /^item$/i ) {
+  
+  $nes_tags->{'title'}         = $item;
+  $nes_tags->{'show_comments'} = 0 if $item eq 'index';
+  $nes_tags->{'content'} = 'items.nhtml';
+
+} elsif ( $action =~ /^profile$/i ) {
+  
+  $nes_tags->{'show_comments'} = 0;
+  $nes_tags->{'title'}         = 'User profile';
+  $nes_tags->{'content'} = 'profile.nhtml';
+
+} elsif ( $action =~ /^users$/i ) {
+  
+  $nes_tags->{'show_comments'} = 0;
+  $nes_tags->{'title'}         = 'Users List';
+  $nes_tags->{'content'} = 'user_list.nhtml';
+
+} elsif ( $action =~ /^logout$/i ) {
+  
+  $nes_tags->{'content'} = 'logout.nhtml';
+
+} else {
+  
+  $nes_tags->{'content'} = 'items.nhtml';
+
+}
+
+$nes_tags->{'link_source'} = $ENV{'QUERY_STRING'};
+$nes_tags->{'link_source'} = $ENV{'QUERY_STRING'}.'&source=1#source' if !$source;
+$nes_tags->{'title'}       = 'Show Source: '.$item if $source;
+
+
 $nes->out(%$nes_tags);
 
-# importante que devuelvan 1 para evitar un error "couldn't run"
 1;

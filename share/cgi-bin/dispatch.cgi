@@ -15,7 +15,7 @@
 #  Repository:
 #  http://github.com/Skriptke/nes
 # 
-#  Version 1.00
+#  Version 1.03
 #
 #  dispatch.cgi
 #
@@ -28,8 +28,7 @@ use Nes;
   
   package dispatch;
 
-  my $nes = Nes::Singleton->new();
+  my $nes = Nes::Singleton->start();
   $nes->run();
   
 }
-

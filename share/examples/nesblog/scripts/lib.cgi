@@ -22,10 +22,7 @@
 # ------------------------------------------------------------------------------
 
 use Nes;
-
 my $nes = Nes::Singleton->new();
-
-# archivo de configuración .nes.cfg
 my $config = $nes->{'CFG'};
 
 # obtiene el último artículo publicado
@@ -50,13 +47,41 @@ sub latest {
   my $count = 0;
   foreach my $filename (@files) {
     my %this;
-    $filename =~ s/(.*)\.html$/$1/ || next;
+    $filename =~ s/(.*)\.nhtml$/$1/ || next;
     last if $count++ >= $num;
     $this{'name'} = $filename;
     push( @articles, \%this );
   }
 
   return @articles;
+}
+
+sub check_user_login {
+  my $user = shift;
+  my $pass = shift;
+  
+  return 0 if !$user || !$pass;
+  
+  my $query = qq~SELECT name  
+                 FROM  `users`
+                 WHERE ( name = \'$user\') AND (password = PASSWORD(\'$pass\'))
+                 LIMIT 0,1;~;  
+  
+  use Nes::DB;
+  my $config    = $nes->{'CFG'};
+  my $db_name   = $config->{'DB_base'};
+  my $db_user   = $config->{'DB_user'};
+  my $db_pass   = $config->{'DB_pass'};
+  my $db_driver = $config->{'DB_driver'};
+  my $db_host   = $config->{'DB_host'};
+  my $db_port   = $config->{'DB_port'};
+  my $base      = Nes::DB->new( $db_name, $db_user, $db_pass, $db_driver, $db_host, $db_port );
+  my @result = $base->sen_select($query);
+  
+  my $user_id = $result[0]->{'name'};
+     $user_id = 0 if $user_id !~ /^$user$/;
+  
+  return $user_id;
 }
 
 sub fecha {

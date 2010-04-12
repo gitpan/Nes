@@ -1,16 +1,24 @@
 
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #
-#  NES by - Skriptke
+#  Nes by Skriptke
 #  Copyright 2009 - 2010 Enrique F. Castañón
 #  Licensed under the GNU GPL.
+#
+#  CPAN:
+#  http://search.cpan.org/dist/Nes/
+#
+#  Sample:
 #  http://nes.sourceforge.net/
+#
+#  Repository:
+#  http://github.com/Skriptke/nes
 # 
-#  Version 0.9 pre
+#  Version 1.03
 #
 #  forms_plugin.pm
 #
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 package forms_plugin;
@@ -32,6 +40,10 @@ use strict;
     $self->{'captcha_name'} = '';
 
     $self->{'tag_form'} = 'form';
+    
+    foreach my $tag ( keys %{ $self->{'container'}->{'content_obj'}->{'tags'} } ) {
+      $self->{'tags'}{$tag} = $self->{'container'}->{'content_obj'}->{'tags'}{$tag};
+    }    
 
     return $self;
   }
@@ -62,15 +74,6 @@ use strict;
     my $self = shift;
     my ( $code, @param ) = @_;
 
-    foreach (@param) {
-
-      # sólo los que tengan código, ahorrar un poco de cpu
-      if (/$self->{'pre_start'}/) {
-        my $interpret = nes_interpret->new( $self->postformat($_) );
-        $_ = $interpret->go( %{ $self->{'tags'} } );
-      }
-    }
-
     $self->{'name'} = shift @param;
     $self->{'auto_submit'} = 1 if $self->{'auto_submit'} ne '0';
 
@@ -78,7 +81,7 @@ use strict;
 
     return $self->{'form'}{ $self->{'name'} }->out();
   }
-
+  
 }
 
 {
@@ -89,11 +92,17 @@ use strict;
 
   sub new {
     my $class = shift;
-    my ( $out, $name, $auto_submit, $captcha_name, $captcha_last, $expire, $expire_last, $location, $attempts ) = @_;
+    my ( $out, $name, $auto_submit, $captcha_name, $captcha_last, $expire, $expire_last, $location, $attempts, $attempts_for_captcha ) = @_;
     my $self = $class->SUPER::new();
+
+    foreach my $tag ( keys %{ $self->{'container'}->{'content_obj'}->{'tags'} } ) {
+      $self->{'tags'}{$tag} = $self->{'container'}->{'content_obj'}->{'tags'}{$tag};
+    }    
 
     $self->{'plugin'} = nes_plugin->get_obj('forms_plugin');
     $self->{'plugin'}->add_obj( $name, $self );
+    
+    $self->{'attempts_for_captcha'} = $attempts_for_captcha;
 
     $self->{'tag_obfuscated'} = 'obfuscated';
     $self->{'tag_form_check'} = 'check';
@@ -117,7 +126,7 @@ use strict;
     $self->{'form_start_field'}  = '<input type="hidden" name="' . $self->{'form_start_name'} . '"  value="' . $self->{'name'} . '" />';
     $self->{'form_finish_field'} = '<input type="hidden" name="' . $self->{'form_finish_name'} . '"  value="' . $self->{'name'} . '" />';
     $self->{'auto_submit_field'} = '';
-    $self->{'auto_submit_field'} = 'document.' . $self->{'name'} . '.submit();' if $self->{'auto_submit'};
+    $self->{'auto_submit_field'} = 'document.' . $self->{'name'} . '.submit();';
 
     $self->{'tmp'} = nes_tmp->new( $self->{'CFG'}{'forms_plugin_suffix'}, $self->{'name'} );
 
@@ -126,8 +135,12 @@ use strict;
     $self->{'form_is_finish'} = 0;
     $self->{'form_is_finish'} = 1 if $self->{'form_finish'} eq $self->{'name'};
 
-    $self->{'expire'} = $expire || $self->{'CFG'}{'forms_plugin_expire'};
-    $self->{'expire'} = $expire_last || $self->{'CFG'}{'forms_plugin_expire_last'} if $self->{'form_is_start'};
+    $self->{'expire'}      = $expire || $self->{'CFG'}{'forms_plugin_expire'};
+    $self->{'expire_last'} = $expire_last || $self->{'CFG'}{'forms_plugin_expire_last'};
+    
+    if ( $self->{'form_is_start'} && !$self->{'form_finish'} ) {
+      $self->{'expire'} = $self->{'expire_last'};
+    }
 
     $self->{'is_ok'} = 0;
 
@@ -141,11 +154,17 @@ use strict;
 
     if ( $self->{'form_is_start'} ) {
       $self->load();
-      $self->{'tmp'}->save( time . ':' );
+      $self->{'tmp'}->save( time . ':' ) if !$self->{'form_is_finish'};
     }
     
     $self->get_attempts;
-    
+
+    if ( $self->{'attempts'} < $self->{'attempts_for_captcha'}+1 && $self->{'attempts_for_captcha'} ) {
+      $self->{'auto_submit'}  = 1;
+      $self->{'captcha_name'} = '';
+      $self->{'captcha_last'} = '';
+    }    
+
     $self->replace_check();
     $self->replace_obfuscated();
     $self->replace_init_form();
@@ -233,10 +252,11 @@ use strict;
         }
 
       }
-      if ( $type =~ /^\/(.*)\/$/ ) {
+      if ( $type =~ /^\/(.*)\/(.*)$/ ) {
+        my $regex = "(?x$2)$1";
 
         if ($this_field) {    # sólo da error si el campo no esta vacío, podía ser opcional
-          $error .= 'regular expression' if $this_field !~ /$1/;
+          $error .= 'regular expression' if $this_field !~ /$regex/;
         }
 
       }
@@ -252,17 +272,38 @@ use strict;
 
   sub replace_obfuscated {
     my $self = shift;
-
-    $self->{'out'} =~ s/$self->{'pre_start'}\s*$self->{'tag_plugin'}\s*$self->{'tag_obfuscated'}\s*(.+?)\s*$self->{'pre_end'}/$self->{'obfuscated'}{$1} = $self->get_key( 5 + int rand 4 )/egi;
-
+    
+#    $self->{'out'} =~ s/$self->{'pre_start'}\s*$self->{'tag_plugin'}\s*$self->{'tag_obfuscated'}\s*(.+?)\s*$self->{'pre_end'}/$self->{'obfuscated'}{$1} = $self->get_key( 5 + int rand 4 )/egi;
+#    return;
+    
+    my $obfuscated_tag = qr{(?six)
+                        \s*$self->{'pre_start'}\s*
+                            $self->{'tag_plugin'}
+                            \s*
+                            $self->{'tag_obfuscated'}    # tag del plugin
+                            \s*
+                            (\([^\(\)]+\)|[^\(\)]\S+)    # parametros
+                            \s*
+                        $self->{'pre_end'}\s*
+                        };  
+    
+    $self->{'out'} =~ s/$obfuscated_tag/$self->obfuscated($self->param_block($1))/ge;     
+   
     return;
   }
+  
+  sub obfuscated {
+    my $self = shift;
+    my ( $field ) = @_;
 
+    return $self->{'obfuscated'}{$field} = $self->get_key( 5 + int rand 4 );
+  }  
+  
   sub replace_init_form {
     my $self = shift;
 
     # siempre, indica que se ha iniciado el formulario
-    $self->{'out'} =~ s/(\<\/form\>)/$self->{'form_start_field'}\n$1/;
+    $self->{'out'} =~ s/(\<\/form\>)/$self->{'form_start_field'}$1/;
 
     return;
   }
@@ -290,11 +331,14 @@ use strict;
       $self->{'out'} =~ s/<select /<input readonly=\"readonly\" /gi;
 
       # excluimos submit y captcha
+      $self->{'out'} =~ s/<input readonly=\"readonly\" (.*type\s*=\s*\"?hidden\"?)/<input $1/gi;
       $self->{'out'} =~ s/<input readonly=\"readonly\" (.*type\s*=\s*\"?submit\"?)/<input $1/gi;
       $self->{'out'} =~ s/<input readonly=\"readonly\" (.*name\s*=\s*\"?$self->{'CFG'}{'captcha_plugin_start'}_$self->{'captcha_name'}\"?)/<input $1/gi if $self->{'captcha_name'};
       $self->{'out'} =~ s/<input readonly=\"readonly\" (.*name\s*=\s*\"?$self->{'captcha_name'}\"?)/<input $1/gi if $self->{'captcha_name'};
+      $self->{'out'} =~ s/<input readonly=\"readonly\" (.*this_is_captcha_field)/<input $1/gi;
     }
 
+    $self->{'auto_submit_field'} = ''  if !$self->{'auto_submit'};
     if ( $self->{'form_is_start'} && !$self->{'form_is_finish'} ) {
       $self->{'last_step'} = 1;
       $self->{'plugin'}->add_env( 'forms_plugin', $self->{'name'}, 'last_step', '1' );
@@ -337,13 +381,6 @@ use strict;
     $self->{'plugin'}->add_last_error( 'forms_plugin', $self->{'name'}, "max attempts, wait $self->{'max_time'} minutes" );
     return 0 if $self->{'attempts'} > $self->{'max_attempts'};
 
-    # no se ha terminado de llenar el formulario
-    $self->{'last_error'} = 'no form finish';
-    $self->{'fatal_error'} = 0;
-    $self->{'plugin'}->add_last_error( 'forms_plugin', $self->{'name'}, 'no form finish' );
-    $self->{'plugin'}->add_fatal_error( 'forms_plugin', $self->{'name'}, '' );
-    return 0 if !$self->{'form_is_finish'};
-
     # no existe la cookie
     $self->{'last_error'}  = 'no cookie';
     $self->{'fatal_error'} = 1;
@@ -357,6 +394,13 @@ use strict;
     $self->{'plugin'}->add_fatal_error( 'forms_plugin', $self->{'name'}, '2' );
     $self->{'plugin'}->add_last_error( 'forms_plugin', $self->{'name'}, 'cookie expired, posible manipulate cookie' );
     return 0 if $self->{'expired'};
+
+    # no se ha terminado de llenar el formulario
+    $self->{'last_error'} = 'no form finish';
+    $self->{'fatal_error'} = 0;
+    $self->{'plugin'}->add_last_error( 'forms_plugin', $self->{'name'}, 'no form finish' );
+    $self->{'plugin'}->add_fatal_error( 'forms_plugin', $self->{'name'}, '' );
+    return 0 if !$self->{'form_is_finish'};
 
     # hash no coninciden, seguramente la cookie ha sido manipulada
     $self->{'last_error'}  = 'posible manipulate cookie data';
@@ -390,8 +434,8 @@ use strict;
     $self->{'fatal_error'} = 0;
     $self->{'plugin'}->add_fatal_error( 'forms_plugin', $self->{'name'}, 0 );
     $self->{'plugin'}->add_last_error( 'forms_plugin', $self->{'name'}, 'ok' );
-    my $data = time . ':' . $self->{'key_value'};
-    $self->{'tmp'}->clear($data);
+#    my $data = time . ':' . $self->{'key_value'};
+#    $self->{'tmp'}->clear($data);
 
     $self->{'is_ok'} = 1;
 

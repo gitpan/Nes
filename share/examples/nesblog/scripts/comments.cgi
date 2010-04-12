@@ -3,51 +3,46 @@
 # -----------------------------------------------------------------------------
 #
 #  Nes by Skriptke
-#  Copyright 2009 - 2010 Enrique F. Castañón
+#  Copyright 2009 - 2010 Enrique F. Castañón Barbero
 #  Licensed under the GNU GPL.
+#
+#  CPAN:
+#  http://search.cpan.org/dist/Nes/
 #
 #  Sample:
 #  http://nes.sourceforge.net/
 #
 #  Repository:
 #  http://github.com/Skriptke/nes
-#
-#  CPAN:
-#  http://search.cpan.org/perldoc?Nes
 # 
-#  Version 1.00
+#  Version 1.03
 #
 #  comments.cgi
 #
-#  Muestra los comentarios del artículo
-#
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 use strict;
-
 use Nes;
 
-my $nes = Nes::Singleton->new();
-
-# comentario para generar un enlace en "Ver fuente" a lib.cgi: ../scripts/lib.cgi
-require 'lib.cgi';
-
-# en $nes_tags vamos a guardar los valores que posteriormente le pasaremos a $nes en el método out
+my $nes      = Nes::Singleton->new();
+my $q        = $nes->{'query'}->{'q'};
+my $config   = $nes->{'CFG'};
+my $action   = $q->{'action'};
+my $item     = $q->{'item'};
 my $nes_tags = {};
 
-# El objeto {'query'} maneja los métodos POST y GET y la variable {'q'} contiene
-# los parametros de los métodos POST y GET de igual modo que el módulo CGI
-# Esto es similar a hacer my $q = CGI->new; y podemos seguir haciendolo así.
-# Aquí hemos asigando la variable en dos pasos como ejemplo se uso
-# pero podemos hacer directamente my $q = $nes->{'query'}->{'q'};
-my $query = $nes->{'query'};
-my $q     = $query->{'q'};
+require 'lib.cgi';
 
-my $lang = $ENV{'PATH_INFO'};
-$lang =~ s/.*\/(..)\/[^\/]*/$1/;
+my $item_name = $q->{'item'};
+my $file_name = $config->{'miniblog_item_dir'}.'/'.$item_name.'.nhtml';
+   $item_name = last_article() if !-e $file_name;
+   $item_name =~ s/.*\///;
+   $item_name =~ s/\..?htm.?$//;   
+   $file_name = $config->{'miniblog_item_dir'}.'/'.$item_name.'.nhtml';
 
-$nes_tags->{'article'} = $q->{'item'} || last_article();
-$nes_tags->{'lang'}    = $lang;
+$nes_tags->{'article'}   = $file_name;
+$nes_tags->{'item_name'} = $item_name;
+
 
 $nes->out(%$nes_tags);
 

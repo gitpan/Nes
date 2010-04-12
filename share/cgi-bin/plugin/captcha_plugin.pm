@@ -1,21 +1,58 @@
 
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #
-#  NES by - Skriptke
-#  Copyright 2009 - 2010 Enrique F. Castañón
+#  Nes by Skriptke
+#  Copyright 2009 - 2010 Enrique F. Castañón Barbero
 #  Licensed under the GNU GPL.
+#
+#  CPAN:
+#  http://search.cpan.org/dist/Nes/
+#
+#  Sample:
 #  http://nes.sourceforge.net/
+#
+#  Repository:
+#  http://github.com/Skriptke/nes
 # 
-#  Version 0.9 pre
+#  Version 1.03
 #
 #  captcha_plugin.pm
 #
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-
+# despues de tanto parche, esto hay que volver a escribirlo.
 package captcha_plugin;
 
 use strict;
+
+my $captcha;
+
+sub replace_captcha {
+  my ( $out, @param ) = @_;
+  my ( $name, $type, $digits, $noise, $size, $sig, $spc, $expire, $attempts ) = @param;
+
+  $type = 'ascii' if !$type;
+  $captcha = nes_captcha->new( $name, $type, $digits, $noise, $size, $sig, $spc, $expire, $attempts );
+  $captcha->create;
+
+  return $out;
+}
+
+sub replace_captcha_code {
+  my ( $out, @param ) = @_;
+
+  return $captcha->out();   
+}
+
+sub verify {
+  my ( $name, $type, $expire, $attempts ) = @_;
+
+  $captcha = nes_captcha->new( $name,$type,'','','','','', $expire, $attempts );
+  $captcha->verify();
+  $captcha->{'tmp'}->clear() if $captcha->{'is_ok'};
+     
+}
+
 
 {
 
@@ -27,6 +64,10 @@ use strict;
     my $class = shift;
     my ($out) = @_;
     my $self  = $class->SUPER::new($out);
+    
+    foreach my $tag ( keys %{ $self->{'container'}->{'content_obj'}->{'tags'} } ) {
+      $self->{'tags'}{$tag} = $self->{'container'}->{'content_obj'}->{'tags'}{$tag};
+    }        
 
     $self->{'plugin'} = nes_plugin->new( 'captcha_plugin', 'captcha_plugin', $self );
 
@@ -41,13 +82,11 @@ use strict;
     my $self = shift;
     my ( $block, $space1, $space2 ) = @_;
     my ( $tag, $params, $code ) = $block =~ /$self->{'block_plugin'}/;
-#    $tag = '' if !$tag;
-    my @param = $self->param_block($params);
     my $out;
 
     if ( $tag && $tag =~ /^$self->{'tag_captcha'}$/ ) {
 
-      $out = $self->replace_captcha( $code, @param );
+      $out = $self->replace_captcha( $code, $self->param_block($params) );
 
     } else {
 
@@ -70,6 +109,7 @@ use strict;
 
     $type = 'ascii' if !$type;
     $self->{'captcha'}{$name} = nes_captcha->new( $name, $type, $digits, $noise, $size, $sig, $spc, $expire, $attempts );
+    $self->{'captcha'}{$name}->create;
 
     my $captcha_code = $self->{'captcha'}{$name}->out();
     $out =~ s/$self->{'pre_start'}\s*$self->{'tag_plugin'}\s*$self->{'tag_captcha_out'}\s*(.+?)\s*$self->{'pre_end'}/$captcha_code/gi;
@@ -90,9 +130,21 @@ use strict;
     my ( $name, $type, $digits, $noise, $size, $sig, $spc, $expire, $attempts ) = @_;
     my $self = $class->SUPER::new();
 
-    $self->{'plugin'} = nes_plugin->get_obj('captcha_plugin');
-    $self->{'plugin'}->add_obj( $name, $self );
+    foreach my $tag ( keys %{ $self->{'container'}->{'content_obj'}->{'tags'} } ) {
+      $self->{'tags'}{$tag} = $self->{'container'}->{'content_obj'}->{'tags'}{$tag};
+    }    
     
+    $self->{'cookie_name'} = 'cp_'.$name;
+
+    $self->{'plugin'} = nes_plugin->get_obj('captcha_plugin');
+
+    if ($self->{'plugin'} =~ /nes_plugin/) {
+      # antiguo método, obsoleto
+      $self->{'plugin'}->add_obj( $name, $self );
+    }
+    # nevo método
+    $self->{'plugin'} = $self->{'register'}->add_obj('captcha_plugin', $name, $self);
+
     $attempts = $self->{'CFG'}{'captcha_plugin_max_attempts'} if !$attempts;
     ($self->{'max_attempts'}, $self->{'max_time'})  = split ('/',$attempts);
 
@@ -106,15 +158,22 @@ use strict;
 
     $self->{'is_ok'} = 0;
     $self->load_captcha();  
-    $self->{'captcha'}->create();
-    $self->{'key_ok'} = $self->{'captcha'}->{'key_ok'};
-    $self->save_captcha();
-    
-    $self->{'tmp'}->save(time.':') if $self->{'captcha_start'} eq $self->{'captcha_name'};
+
     $self->get_attempts;
 
     return $self;
   }
+  
+  sub create {
+    my $self = shift;
+
+    $self->{'captcha'}->create();
+    $self->{'key_ok'} = $self->{'captcha'}->{'key_ok'};
+    $self->save_captcha();    
+    $self->{'tmp'}->save(time.':') if $self->{'captcha_start'} eq $self->{'captcha_name'};
+    $self->get_attempts;
+    
+  }  
   
   sub get_attempts {
     my $self = shift;
@@ -224,7 +283,7 @@ use strict;
 
     my $expire = $self->{'expire'};
 
-    $self->{'cookies'}->create( $self->{'captcha_name'}, $value, $expire );
+    $self->{'cookies'}->create( $self->{'cookie_name'}, $value, $expire );
     
     return;
   }
@@ -232,7 +291,7 @@ use strict;
   sub load_captcha {
     my $self = shift;
 
-    $self->{'cookie'} = $self->{'cookies'}->get( $self->{'captcha_name'} );
+    $self->{'cookie'} = $self->{'cookies'}->get( $self->{'cookie_name'} );
 
     my $refuse;
     ( $refuse, $self->{'load_key_ok'}, $self->{'time'}, $refuse ) = split( ':', $self->{'cookie'} );

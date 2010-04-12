@@ -15,7 +15,7 @@
 #  Repository:
 #  http://github.com/Skriptke/nes
 # 
-#  Version 1.00
+#  Version 1.03
 #
 #  Setting.pm
 #
@@ -29,9 +29,8 @@
 
   sub new {
     my $class = shift;
-          
-    utl::cleanup(\$instance) if $ENV{'MOD_PERL'};   
-
+    
+    utl::cleanup(\$instance) if $ENV{'MOD_PERL'};
     return $instance if $instance;
 
     my $level       = utl::get_file_dir();
@@ -54,7 +53,9 @@
       plugin_dir     => $nes_dir . '/plugin',
       obj_dir        => $nes_dir . '/obj',
       plugin_top_dir => $nes_top_dir . '/plugin',
-      obj_top_dir    => $nes_top_dir . '/obj',      
+      obj_top_dir    => $nes_top_dir . '/obj',     
+      obj_form       => $nes_top_dir . '/obj/Nes/form',
+      img_dir        => $nes_dir . '/images',
       time_zone      => 'Europe/Madrid',       # * sin implementar *
       locale         => '',                    # es_ES.utf8
       session_prefix => 'NESSESSION',
@@ -109,8 +110,9 @@
         my $line = $_;
         next if $line =~ /^#/;
         next if $line =~ /^$/;
-        my ( $key, $value ) = split( /\s*=\s*/, $line, 2 );
-        my ( $eval ) = $key =~ s/[\@\%\$]$//;
+        my ( $key, $value ) = split( /=\s*/, $line, 2 );
+        $key =~ s/\s*(\@|\%|\$)?$//;
+        my $eval = $1 || 0;
         $value =~ s/\s*$//;
 
         # impide que se reescriba 'set';
@@ -127,7 +129,7 @@
             $eval = '$' if ref( $self->{$key} ) eq 'SCALAR';
             @{ $self->{$key} } = eval { $value } if $eval eq '@';
             %{ $self->{$key} } = eval { $value } if $eval eq '%';
-            $self->{$key}      = eval { $value } if $eval eq '$';
+            $self->{$key}      = eval  "$value"  if $eval eq '$';
           } elsif ( ref( $self->{$key} ) eq 'ARRAY' ) {
             @{ $self->{$key} } = split( /,/, $value );
           } else {
@@ -147,6 +149,9 @@
     $self->{'obj_dir'}        =~ s/[\/\\]$//;
     $self->{'plugin_top_dir'} =~ s/[\/\\]$//;
     $self->{'obj_top_dir'}    =~ s/[\/\\]$//;
+    $self->{'obj_form'}       =~ s/[\/\\]$//;
+
+    push( @INC, ( $self->{'plugin_top_dir'}, $self->{'obj_top_dir'}, $self->{'obj_form'} )  );
     
     return;
   }

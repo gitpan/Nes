@@ -2,7 +2,7 @@
 # -----------------------------------------------------------------------------
 #
 #  Nes by Skriptke
-#  Copyright 2009 - 2010 Enrique F. Castañón Barbero
+#  Copyright 2009 - 2010 Enrique Castañón
 #  Licensed under the GNU GPL.
 #
 #  CPAN:
@@ -14,7 +14,7 @@
 #  Repository:
 #  http://github.com/Skriptke/nes
 # 
-#  Version 1.02
+#  Version 1.03
 #
 #  Nes.pm
 #
@@ -26,7 +26,7 @@ use strict;
 # cgi environment no defined in command line
 no warnings 'uninitialized';
 
-our $VERSION          = '1.02';
+our $VERSION          = '1.02.5_1';
 our $CRLF             = "\015\012";
 our $MAX_INTERACTIONS = 500;
 our $MOD_PERL         = $ENV{'MOD_PERL'} || 0;
@@ -48,12 +48,15 @@ use Nes::Singleton;
     $self->{'previous'} = $class->get_obj();
     $instance{$class}   = $self;
   
+#    utl::cleanup(\%instance) if $ENV{'MOD_PERL'};
+  
     $self->{'top_container'}    = nes_top_container->get_obj();
     $self->{'CFG'}              = Nes::Setting->get_obj();
     $self->{'cookies'}          = nes_cookie->get_obj();
     $self->{'session'}          = nes_session->get_obj();
     $self->{'query'}            = nes_query->get_obj();    
     $self->{'container'}        = nes_container->get_obj();
+    $self->{'register'}         = nes_register->get_obj();
     $self->{'nes'}              = $self;
     $self->{'MAX_INTERACTIONS'} = $MAX_INTERACTIONS;
     
@@ -219,9 +222,155 @@ use Nes::Singleton;
 
 }
 
+{
+
+  package nes_register;
+  use vars qw(@ISA);
+  @ISA = qw( Nes );
+
+  sub new {
+    my $class = shift;
+    my $self = $class->SUPER::new();
+
+    return $self;
+  }
+
+  sub set_data {
+    my $self  = shift;
+    my ($class, $name, $data) = @_;
+
+    $self->{'data'}{$class}{$name} = $data;
+      
+    return;
+  }  
+  
+  sub get_data {
+    my $self  = shift;
+    my ($class, $name, $data) = @_;
+      
+    return $self->{'data'}{$class}{$name};
+  }    
+  
+  sub tag {
+    my $self  = shift;
+    my ($class, $tag, $handler) = @_;
+
+    $self->{'tag'}{$tag}{'handler'} = $handler;
+    $self->{'obj'}{$class}{'tag'}{$tag} = $handler;
+      
+    return;
+  }
+  
+  sub handler {
+    my $self  = shift;
+    my ($class, $name_handler, $handler) = @_;
+
+    $self->{'obj'}{'handler'}{$class}{$name_handler} = $handler;
+      
+    return;
+  }  
+  
+  sub add_obj {
+    my $self  = shift;
+    my ($class, $name, $obj) = @_;
+
+    my $cfg_file = $self->{'CFG'}{'plugin_top_dir'}.'/.'.$class.'.nes.cfg';
+    Nes::Setting->load_cfg($cfg_file);  
+
+    $self->{'obj'}{$class}{$name} = $obj;
+
+    return $self;
+  }
+  
+  sub get {
+    my $self  = shift;
+    my ($class, $name) = @_;
+
+    return $self->{'obj'}{$class}{$name};
+  }
+  
+  sub get_tags {
+    my $self  = shift;
+
+    return keys %{ $self->{'tag'} };
+  }
+  
+  sub get_plugins {
+    my $self  = shift;
+
+    return keys %{ $self->{'obj'} };
+  }
+  
+  sub get_names {
+    my $self  = shift;
+    my ($class) = @_;
+
+    return keys %{ $self->{'obj'}{$class} };
+  }    
+  
+  sub get_tag_class {
+    my $self  = shift;
+    my ($tag) = @_;
+
+    return $self->{'tag'}{$tag}{'class'};
+  }  
+  
+  sub get_tag_handler {
+    my $self  = shift;
+    my ($tag) = @_;
+    
+    return \&{$self->{'tag'}{$tag}{'handler'}};
+  }
+  
+  sub get_handler {
+    my $self  = shift;
+    my ($class, $name_handler) = @_;
+
+    return \&{$self->{'obj'}{'handler'}{$class}{$name_handler}};
+  }    
+  
+  sub add_last_error {
+    my $self  = shift;
+    my ($class, $name, $error) = @_;
+
+    $self->{'top_container'}->set_nes_env( 'nes_'.$class.'_'.$name.'_error_last', $error );
+    
+    return;
+  }
+  
+  sub add_fatal_error {
+    my $self  = shift;
+    my ($class, $name, $ok) = @_;
+
+    $self->{'top_container'}->set_nes_env( 'nes_'.$class.'_'.$name.'_error_fatal', $ok );
+
+    return;
+  }  
+  
+  sub add_error {
+    my $self  = shift;
+    my ($class, $name, $type, $error) = @_;
+
+    $self->{'top_container'}->set_nes_env( 'nes_'.$class.'_'.$name.'_error_'.$type, $error );
+
+    return;
+  }   
+  
+  sub add_env {
+    my $self  = shift;
+    my ($class, $name, $type, $value) = @_;
+
+    $self->{'top_container'}->set_nes_env( 'nes_'.$class.'_'.$name.'_'.$type, $value );
+
+    return;
+  } 
+
+}
+
 
 {
 
+  # obsoleto, se mantiene por compatibilidad
   package nes_plugin;
   use vars qw(@ISA);
   @ISA = qw( Nes );
@@ -232,6 +381,8 @@ use Nes::Singleton;
     my $class = shift;
     my ( $obj_class, $name, $obj ) = @_;
     my $self = $class->SUPER::new();
+    
+#    utl::cleanup(\%instance) if $ENV{'MOD_PERL'};
 
     $self->{'plugin'} = $obj_class;
     $self->{'obj'}{$name} = $obj;
@@ -307,8 +458,9 @@ use Nes::Singleton;
     return $self->SUPER::get_obj();
     
   }  
-
+  
 }
+
 
 {
 
@@ -501,7 +653,7 @@ use Nes::Singleton;
 }
 
 
-{
+{ # todo, add "<SELET MULTIPLE>" support
 
   package nes_query;
   use vars qw(@ISA);
@@ -542,6 +694,66 @@ use Nes::Singleton;
 
     return;
   }
+  
+  sub param {
+    my $self  = shift;
+    my ($param) = @_;
+
+    return $self->{'CGI'}->param($param);
+  }  
+  
+#  sub get_upload {
+#    my $self  = shift;
+#    my ($param,$buffer) = @_;
+# 
+#    my $fh = $self->{'CGI'}->upload($param);
+#    return if !$fh;
+#    
+#    return read($fh, $$buffer, 8192);
+#  }  
+  
+  sub get_upload_buffer {
+    my $self  = shift;
+    my ($param,$buffer) = @_;
+ 
+    my $fh = $self->{'CGI'}->upload($param);
+    return if !$fh;
+    
+    return read($fh, $$buffer, 8192);
+  }
+  
+  sub get_upload_name {
+    my $self  = shift;
+    my ($param) = @_;
+
+    return $self->{'CGI'}->param_filename($param);
+  }
+  
+  sub get_upload_fh {
+    my $self  = shift;
+    my ($param) = @_;
+ 
+    return $self->{'CGI'}->upload($param);
+  }
+  
+  sub upload_is_tmp {
+    my $self  = shift;
+    my ($param) = @_;
+ 
+    return $self->{'CGI'}->upload_is_tmp($param);
+  }
+  
+  sub upload_max_size {
+    my $self  = shift;
+ 
+    return $self->{'CGI'}->upload_max_size();
+  }  
+  
+  sub post_max_size {
+    my $self  = shift;
+ 
+    return $self->{'CGI'}->post_max_size();
+  }  
   
   sub url_encode {
     my $self  = shift;
@@ -585,7 +797,8 @@ use Nes::Singleton;
   sub get {
     my $self  = shift;
     my ($key) = @_;
-
+    
+#    return $self->{'CGI'}->param($key);
     return $self->{'q'}{$key};
   }
 
@@ -647,6 +860,7 @@ use Nes::Singleton;
     $self->{'query'}     = nes_query->new();
     $self->{'cookies'}   = nes_cookie->new();
     $self->{'session'}   = nes_session->new();
+    $self->{'register'}  = nes_register->new();
    
     $self->init_nes_env();
     $self->init_cgi_env();
@@ -834,13 +1048,14 @@ use Nes::Singleton;
     $self->{'souce_types'}{'txt'}     = 'txt';
     $self->{'souce_types'}{'bash'}    = 'sh';
     $self->{'souce_types'}{'python'}  = 'py';
-    #$self->{'souce_types'}{'js'}      = 'js';
+    $self->{'souce_types'}{'js'}      = 'njs,js';
     #$self->{'souce_types'}{'mail'}    = 'eml';
     # ...
 
-    $self->get_source();    #  set @{$self->{'file_souce'}}
-    $self->set_out();       #  set $self->{'file_script'}, $self->{'out'}
-    $self->get_type();      #  set $self->{'type'}, $self->{'content_obj'}
+    $self->get_source();      #  set @{$self->{'file_souce'}}
+    $self->set_out();         #  set $self->{'file_script'}, $self->{'out'}
+    $self->get_type();        #  set $self->{'type'}, $self->{'content_obj'}
+    $self->add_parent_tags(); #  hereda los tags
 
     return $self;
   }
@@ -877,6 +1092,9 @@ use Nes::Singleton;
     } elsif ( $self->{'type'} eq 'python' ) {
       $self->{'content_obj'} = nes_python->new( $self );
                
+    } elsif ( $self->{'type'} eq 'js' ) {
+      $self->{'content_obj'} = nes_js->new( $self );
+               
     } else {
       $self->{'content_obj'} = nes_unknown->new( $self );
     }
@@ -907,6 +1125,16 @@ use Nes::Singleton;
 
     return;
   }
+  
+  sub add_parent_tags {
+    my $self  = shift;
+  
+    foreach my $tag ( keys %{ $self->{'previous'}->{'content_obj'}->{'tags'} } ) {
+      $self->{'content_obj'}->{'tags'}{$tag} = $self->{'previous'}->{'content_obj'}->{'tags'}{$tag};
+    }    
+
+    return;
+  }  
 
   sub set_out_content {
     my $self  = shift;
@@ -931,6 +1159,13 @@ use Nes::Singleton;
 
     return;
   }
+  
+  sub get_tag {
+    my $self  = shift;
+    my ($tag) = @_;
+
+    return $self->{'content_obj'}->{'tags'}{$tag};
+  }  
 
   sub set_out {
     my $self  = shift;
@@ -1020,6 +1255,7 @@ use Nes::Singleton;
     $self->{'Content-type'} = "Content-type: text/html";
     $self->{'HTTP-status'}  = "200 Ok";
     $self->{'X-Powered-By'} = "Nes/$VERSION";
+    $self->{'TAG_HTTP-headers'} = '';
     
     return $self;
   }
@@ -1032,6 +1268,9 @@ use Nes::Singleton;
     foreach my $tag ( keys %tags ) {
       $self->{'tags'}{$tag} = $tags{$tag};
     }
+    
+    $self->{'TAG_HTTP-headers'} = $self->{'tags'}{'HTTP-headers'};
+    $self->{'tags'}{'HTTP-headers'} = undef;
 
     return;
   }
@@ -1044,6 +1283,9 @@ use Nes::Singleton;
     foreach my $tag ( keys %tags ) {
       $self->{'tags'}{$tag} = $tags{$tag};
     }
+    
+    $self->{'TAG_HTTP-headers'} = $self->{'tags'}{'HTTP-headers'};
+    $self->{'tags'}{'HTTP-headers'} = undef;    
 
     return;
   }
@@ -1170,11 +1412,11 @@ use Nes::Singleton;
   
   sub out {
     my $self  = shift;
-    
+   
     print $self->{'cookies'}->out;
     print "X-Powered-By: $self->{'X-Powered-By'}\n";
 #    print "Status: $self->{'HTTP-status'}\n" if !$self->{'tags'}{'HTTP-headers'};
-    print $self->{'Content-type'}."\n\n" if !$self->{'tags'}{'HTTP-headers'};
+    print $self->{'TAG_HTTP-headers'} || $self->{'Content-type'}."\n\n";
     print $self->{'out'};
 
   }
@@ -1476,7 +1718,7 @@ use Nes::Singleton;
     print $self->{'cookies'}->out;
     print "X-Powered-By: $self->{'X-Powered-By'}\n";
 #    print "Status: $self->{'HTTP-status'}\n" if !$self->{'tags'}{'HTTP-headers'};
-    print $self->{'HTTP-headers'}."\n\n" if !$self->{'tags'}{'HTTP-headers'};
+    print $self->{'TAG_HTTP-headers'} || $self->{'Content-type'}."\n\n";
     print $self->{'out'};
 
   }
@@ -1546,6 +1788,24 @@ use Nes::Singleton;
    
 }
 
+{
+
+  package nes_js;
+  use vars qw(@ISA);
+  @ISA = qw( nes_content );
+
+  sub new {
+    my $class = shift;
+    my ( $container ) = @_;
+    my $self = $class->SUPER::new($container);
+
+    $self->{'Content-type'} = "Content-type: text/javascript";
+
+    return $self;
+  }
+  
+}
+
 # lo intenta como si fuese un archivo de texto plano
 {
 
@@ -1579,8 +1839,8 @@ use Nes::Singleton;
 
     $self->{'tag_start'} = '{:';
     $self->{'tag_end'}   = ':}';
-    $self->{'pre_start'} = '┌';
-    $self->{'pre_end'}   = '┐';    
+    $self->{'pre_start'} = '〈';
+    $self->{'pre_end'}   = '〉';    
     
     $self->{'tag_nes'}   = 'NES';
 
@@ -1595,8 +1855,8 @@ use Nes::Singleton;
     $self->{'tag_comment'} = '\#';
     $self->{'tag_plugin'}  = '\&';
     
-    $self->{'pre_subs_start'} = '::·:1:·::';
-    $self->{'pre_subs_end'}   = '::·:2:·::';
+    $self->{'pre_subs_start'} = ':&rang;:';
+    $self->{'pre_subs_end'}   = ':&loz;:';
 
     $self->{'out'} = $out;
     $self->preformat() if $out;
@@ -1621,8 +1881,8 @@ use Nes::Singleton;
     my $param_bracket;
     my $comment;
 
+    no warnings;
     use re 'eval';
-
     $reg_block = qr/
                       (          
                           $self->{'pre_start'}       
@@ -1635,20 +1895,20 @@ use Nes::Singleton;
                       )
                       ( ?)             
                  /ix;
-
+                 
     $param_bracket = qr/
                           (                    
                            \(             # parametros con paréntesis
                               (?>                
                               (?> [^\(\)]+ ) 
-                              |                 
+                            |                 
                               (??{$param_bracket})       
                               )*               
                            \)
                             |
-                            [^\(\)]\S+   # o sin paréntesis
+                            [^\(\)]\S*   # o sin paréntesis
                           )                     
-                    /isx;
+                    /ix;
 
     $reg_tag = qr/
                     ^\s*$self->{'pre_start'}\s*
@@ -1672,7 +1932,7 @@ use Nes::Singleton;
                         ^\s*$self->{'pre_start'}\s*
                             $self->{'tag_plugin'} 
                             \s*
-                            (\S*)                           # tag del plugin
+                            (\S+)                           # tag del plugin
                             \s*
                             $param_bracket                  # parametros
                             (.*)                            # code
@@ -1771,7 +2031,7 @@ use Nes::Singleton;
 
   sub param_block {
     my $self  = shift;
-    my ($params) = @_;
+    my ($params,$skip_inclusion) = @_;
 
     return if !$params;
 
@@ -1787,15 +2047,30 @@ use Nes::Singleton;
     #   las comillas requieren barra invertida
     # las comillas dobles no se utilizan, se reservan para su uso en futuras
     # versiones, requieren barra invertida.
+    
+    # 1.02.2 soporte para dobles comillas en parámetros:
+    # ("parámetro \"uno\"", "parámetro 'dos'"):
 
     $params =~ s/^\s*\(//;
     $params =~ s/\)\s*$//;
     my @param;
     my $this = '';
-    while ( $params =~ s/\s*'([^\'\\]*(?:\\.[^\'\\]*)*)'\s*,?|\s*([^,\s]+)\s*,?|\s*,// ) {
+    while ( $params =~ s/\s*"([^\"\\]*(?:\\.[^\"\\]*)*)"\s*,?|\s*'([^\'\\]*(?:\\.[^\'\\]*)*)'\s*,?|\s*([^,\s]+)\s*,?|\s*,// ) {
       $this = $+;
       $this =~ s/\\'/'/g if $this;
       $this =~ s/\\"/"/g if $this;
+
+      if ( !$skip_inclusion ) { # Permite la inclusión en los parámetros
+        if ($this =~ /$self->{'pre_start'}/) {
+          my $interpret = nes_interpret->new( $self->postformat($this) );
+          $this = $interpret->go( %{ $self->{'tags'} } );
+        }
+        if ($this =~ /$self->{'tag_start'}/) {
+          my $interpret = nes_interpret->new( $this );
+          $this = $interpret->go( %{ $self->{'tags'} } );
+        }
+      }   
+ 
       push @param, $this;
     }
 
@@ -1818,7 +2093,7 @@ use Nes::Singleton;
 
     } elsif ( $tag =~ /^$self->{'tag_sql'}$/ ) {
 
-      $out = $self->replace_nsql( $code, $self->param_block($params) );
+      $out = $self->replace_nsql( $code, $self->param_block($params,1) );
 
     } elsif ( $tag =~ /^$self->{'tag_hash'}$/ ) {
 
@@ -1835,6 +2110,10 @@ use Nes::Singleton;
     } elsif ( $tag =~ /^$self->{'tag_env'}$/ ) {
 
       $out = $self->replace_env( $self->param_block($params) );
+
+    } elsif ( $tag =~ /^$self->{'tag_plugin'}$/ ) {
+
+      $out = $self->replace_plugin( $block, $space1, $space2 );
 
     } else {
 
@@ -1902,13 +2181,6 @@ use Nes::Singleton;
     my ( $version, $params ) = $block =~ /$tagnes/;
     my @param = $self->param_block($params);
 
-    # Permite la inclusión:
-    foreach (@param) {
-      if (/$self->{'tag_start'}/) {    # ahorrar un poco de cpu
-        my $interpret = nes_interpret->new($_);
-        $_ = $interpret->go( %{ $self->{'tags'} } );
-      }
-    }
     unshift( @param, $version );
 
     return @param;
@@ -1970,21 +2242,16 @@ use Nes::Singleton;
     my $self  = shift;
     my (@param) = @_;
 
-    # Permite la inclusión:
-    foreach (@param) {
-
-      # sólo los que tengan código, ahorrar un poco de cpu
-      if (/$self->{'pre_start'}/) {
-        my $interpret = nes_interpret->new( $self->postformat($_) );
-        $_ = $interpret->go( %{ $self->{'tags'} } );
-      }
-    }
-
     my $file = shift @param;
 
     my $obj_name = $file;
     $obj_name =~ s/.*\///;
     $obj_name =~ s/\.[^\.]*$//;
+    
+    unless ( $file ) {
+      warn "Void include in $self->{'container'}->{'file_name'}";
+      return '';
+    }    
 
     my $count = 0;
     $self->{'top_container'}->set_nes_env( 'q_obj_param_' . $count, $obj_name );
@@ -2138,6 +2405,28 @@ use Nes::Singleton;
 
     return $var;
   }
+  
+  sub replace_plugin {
+    my $self  = shift;
+    my ( $block, $space1, $space2 ) = @_;
+    my ( $tag, $params, $code ) = $block =~ /$self->{'block_plugin'}/;
+    my $out;
+    my ( @register_tags ) = $self->{'register'}->get_tags();
+
+    foreach my $tag_plugin ( @register_tags ) { 
+      if ( $tag =~ /^$tag_plugin$/i ) {
+        my $handler = $self->{'register'}->get_tag_handler($tag_plugin);
+        if ( !$handler ) {
+          warn "No handler for plugin Tag: $tag_plugin ";
+          next;
+        }       
+        $out = $handler->( $code,$self->param_block($params) );
+        return $out;
+      } 
+    }
+    
+    return '';    
+  }  
 
 }
 
@@ -2313,33 +2602,34 @@ use Nes::Singleton;
       require Apache2::RequestUtil;
       require Apache2::RequestIO;
       require APR::Pool;
-      Apache2::RequestUtil->request->pool->cleanup_register
-        (
-          sub { 
-                foreach my $var (@vars) {
-                  $$var = undef; 
-                }
-                return 1; 
-              }
-        );
+      Apache2::RequestUtil->request->pool->cleanup_register(\&utl::cleanup_callback, @vars);
+
     }
       
     if ( $MOD_PERL1 ) {
       require Apache;
-      Apache->request->register_cleanup
-        (
-          sub { 
-                foreach my $var (@vars) {
-                  $$var = undef; 
-                }
-                return 1;
-              }
-        );
+      Apache->request->register_cleanup(\&utl::cleanup_callback, @vars);
     }
     
     return 1;
-  } 
+  }
+  
+  sub cleanup_callback {
+    my (@vars) = @_;
+    
+    foreach my $var (@vars) {
+      my $ref = ref $var;
+      undef $$var if $ref eq 'SCALAR' || $ref eq 'REF' ;
+      undef %$var if $ref eq 'HASH';
+      undef @$var if $ref eq 'ARRAY';
+    }
+  
+    return 1;
+  }  
 
 }
+
+
+
 
 1;

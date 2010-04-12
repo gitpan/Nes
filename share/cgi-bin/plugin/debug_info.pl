@@ -1,17 +1,25 @@
 #!/usr/bin/perl
 
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #
-#  NES by - Skriptke
-#  Copyright 2009 - 2010 Enrique F. Castañón
+#  Nes by Skriptke
+#  Copyright 2009 - 2010 Enrique Castañón
 #  Licensed under the GNU GPL.
+#
+#  CPAN:
+#  http://search.cpan.org/dist/Nes/
+#
+#  Sample:
 #  http://nes.sourceforge.net/
+#
+#  Repository:
+#  http://github.com/Skriptke/nes
 # 
-#  Version 0.9 pre
+#  Version 1.03
 #
 #  debug_info.pl
 #
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 use strict;
 use warnings;
@@ -29,6 +37,7 @@ $info->add();
 if ( $nes->{'container'} eq $nes->{'top_container'}->{'container'} && $config->{'debug_info_show_in_out'} ) {
   
   $nes->{'container'}->set_out_content( $container->get_out_content.$info->{'out'} );
+  $info->del_instance();
 
 }
 

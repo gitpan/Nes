@@ -15,7 +15,7 @@
 #  Repository:
 #  http://github.com/Skriptke/nes
 # 
-#  Version 1.00
+#  Version 1.03
 #
 #  Singleton.pm
 #
@@ -24,22 +24,20 @@
 {
   package Nes::Singleton;
   
-  my $singleton;
+  my $instance;
 
   sub new {
     my $class = shift;
-    my $self  = $singleton || bless {}, $class;
+    my $self  = $instance || bless {}, $class;
     my ( $file ) = @_;
-
-    utl::cleanup(\$singleton) if $ENV{'MOD_PERL'};   
-
-    if ( $singleton ) {
+    
+    if ( $instance ) {
       $self->{'container'} = nes_container->get_obj();
       $self->{'this_template_name'} = $self->{'container'}->{'file_name'};
       $self->{'top_template_name'}  = $self->{'top_container'}->{'file'};      
       return $self;
     } else {
-      $singleton = $self;
+      $instance = $self;
     }
 
     $self->{'file'} = $ENV{'PATH_TRANSLATED'} || $file;
@@ -57,7 +55,8 @@
     $self->{'container'}     = nes_container->get_obj();
     $self->{'cookies'}       = nes_cookie->get_obj();
     $self->{'session'}       = nes_session->get_obj();
-    $self->{'query'}         = nes_query->get_obj();      
+    $self->{'query'}         = nes_query->get_obj();
+    $self->{'register'}      = nes_register->get_obj();
     $self->{'nes'}           = $self->{'top_container'}->{'nes'};
     $self->{'this_template_name'} = $self->{'container'}->{'file_name'};
     $self->{'top_template_name'}  = $self->{'top_container'}->{'file'};
@@ -81,8 +80,6 @@
 
     $self->{'container'}->go(); 
     $self->{'top_container'}->{'container'}->out();
-    $self->{'container'}->forget();
-    $self->{'top_container'}->forget();
 
     return;
   }
@@ -97,6 +94,24 @@
 
     return;
   }
+  
+  sub add {
+    my $self = shift;
+    my %tags;
+    (%tags) = @_;
+
+    $self->{'container'}->add_tags(%tags);
+
+    return;
+  }
+  
+  sub start {
+    my $class = shift;
+    
+    utl::cleanup(\$instance) if $ENV{'MOD_PERL'};
+
+    return $class->new();
+  }   
 
 }
 
