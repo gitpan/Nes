@@ -63,10 +63,12 @@ Page body tag.
 
 user-defined delimiter.
 
-Return tag content without tags: '<tag></tag>'
+Return tag content without tags: <tag></tag>
+
     <tag>:-:</tag>
 
-Return tag and include tags: '<tag></tag>'
+Return tag and include tags: <tag></tag>
+
     :-:<tag>:-:</tag>:-: 
 
 =back
@@ -150,7 +152,8 @@ POSSIBILITY OF SUCH DAMAGE
 
 =head1 SEE ALSO
 
-L<Nes>, L<Nes::Tutorial>, Sample to use Nes; L<http://nes.sourceforge.net/>
+L<Nes>, L<Nes::Tutorial>, L<Nes::Singleton>, L<Nes::nes.cfg>, 
+Sample to use Nes; L<http://nes.sourceforge.net/>
 
 =cut
 
