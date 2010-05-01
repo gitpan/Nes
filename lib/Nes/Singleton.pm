@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-
 # -----------------------------------------------------------------------------
 #
 #  Nes by Skriptke
@@ -15,7 +13,7 @@
 #  Repository:
 #  http://github.com/Skriptke/nes
 # 
-#  Version 1.03
+#  Version 1.04
 #
 #  Singleton.pm
 #
@@ -29,7 +27,7 @@
   sub new {
     my $class = shift;
     my $self  = $instance || bless {}, $class;
-    my ( $file ) = @_;
+    my ( $file, $nes_top_dir, $nes_dir ) = @_;
     
     if ( $instance ) {
       $self->{'container'} = nes_container->get_obj();
@@ -50,7 +48,7 @@
   
     die "No template defined: $@" if !$self->{'file'};
 
-    $self->{'CFG'}           = Nes::Setting->new();
+    $self->{'CFG'}           = Nes::Setting->new( $nes_top_dir, $nes_dir  );
     $self->{'top_container'} = nes_top_container->new( $self->{'file'}, $dir );
     $self->{'container'}     = nes_container->get_obj();
     $self->{'cookies'}       = nes_cookie->get_obj();
@@ -80,6 +78,7 @@
 
     $self->{'container'}->go(); 
     $self->{'top_container'}->{'container'}->out();
+    $self->{'container'}->forget();
 
     return;
   }
@@ -104,14 +103,20 @@
 
     return;
   }
-  
+   
   sub start {
     my $class = shift;
     
     utl::cleanup(\$instance) if $ENV{'MOD_PERL'};
 
     return $class->new();
-  }   
+  }
+  
+  sub instance {
+    my $class = shift;
+    
+    return $instance;
+  }     
 
 }
 
