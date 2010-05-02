@@ -29,7 +29,7 @@ use strict;
 no warnings 'uninitialized';
 
 
-our $VERSION          = '1.03.3_0';
+our $VERSION          = '1.03.3_1';
 our $CRLF             = "\015\012";
 our $MAX_INTERACTIONS = 900;
 our $MAX_SCRIPTS      = 900;
@@ -1043,6 +1043,7 @@ use Nes::Singleton;
     $self->{'nes_env'}{'nes_this_dir'}  = $self->{'dir'};
     $self->{'nes_env'}{'nes_this_file'} = $self->{'file'};
     $self->{'nes_env'}{'nes_ver'}       = $self->VERSION;
+    $self->{'nes_env'}{'nes_perl_ver'}  = $];
     $self->{'nes_env'}{'nes_remote_ip'} = $ENV{'REMOTE_ADDR'};
     $self->{'nes_env'}{'nes_remote_ip'} = $ENV{'HTTP_X_REMOTE_ADDR'} 
       if $ENV{'HTTP_X_REMOTE_ADDR'} && ( !$ENV{'REMOTE_ADDR'} || $ENV{'REMOTE_ADDR'} =~ /^(127|192|169|10)\./);
@@ -1381,7 +1382,8 @@ use Nes::Singleton;
     }
     
     $self->{'TAG_HTTP-headers'} = $self->{'tags'}{'HTTP-headers'};
-    $self->{'tags'}{'HTTP-headers'} = undef;    
+    $self->{'tags'}{'_HTTP_headers_'} = $self->{'tags'}{'HTTP-headers'} if $self->{'tags'}{'HTTP-headers'};
+    delete $self->{'tags'}{'HTTP-headers'};    
 
     return;
   }
@@ -2180,7 +2182,7 @@ use Nes::Singleton;
       # cuando vuelven de la función
       # $2.$3.$4$self->replace_block($1) Sí funcionaría, curiosamente?
     }
-#warn "11:$self->{'out'}";
+
     $self->postformat2;
     return $self->{'out'};
   }

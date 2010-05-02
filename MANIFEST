@@ -114,6 +114,8 @@ share/cgi-bin/obj/Nes/form/file_upload.pl
 share/cgi-bin/obj/Nes/ajax/include_js.nhtml
 share/cgi-bin/obj/Nes/ajax/pseudo_ajax.nhtml
 share/cgi-bin/obj/Nes/ajax/pseudo_ajax.pl
+share/cgi-bin/obj/Nes/ajax/ajax.nhtml
+share/cgi-bin/obj/Nes/ajax/ajax.pl
 share/cgi-bin/images/error.gif
 share/cgi-bin/images/error_b.gif
 share/cgi-bin/images/error_w.gif
@@ -273,7 +275,6 @@ share/examples/nesblog/scripts/source.pl
 share/examples/nesblog/tables.sql
 share/examples/hello_nes/tests-cgiapp/cal.sh
 share/examples/hello_nes/tests-cgiapp/sql.nhtml
-share/examples/hello_nes/tests-cgiapp/.directory
 share/examples/hello_nes/tests-cgiapp/.htaccess
 share/examples/hello_nes/tests-cgiapp/lucky.nhtml
 share/examples/hello_nes/tests-cgiapp/index.cgi
