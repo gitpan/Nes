@@ -1,0 +1,289 @@
+=head1 NAME
+
+Nes::Obj::ajax - Nes Perl Ajax and Cross-domain pseudo Ajax requests.
+
+=head1 SYNOPSIS
+
+    {: include ('{: * cfg_obj_top_dir :}/Nes/ajax/ajax.nhtml',
+                "
+                  script             => '/* Js script */',
+                  script_tpl         => 'js-script.nhtml',
+                  lparam             => 
+                         {
+                            param_name => 'literal_value',
+                            {: # more literal params... :}
+                         },           
+                  vparam             => 
+                         {
+                            param_name => 'js_evalue',
+                            {: # more evaluate Js params... :}
+                         },                    
+                  events  => 
+                        [    
+                          {  
+                            open      => 'URL',
+                            method    => 'POST',
+                            event     => 'js_event', 
+                            by        => 'type',
+                            idname    => 'name_by_type',
+                            preload   => 'js_function_name',
+                            afterload => 'js_function_name',
+                            lparam    => 
+                                     {
+                                        param_name => 'literal_value',
+                                        {: # more literal params... :}
+                                     },           
+                            vparam    => 
+                                     {
+                                        param_name => 'js_evalue',
+                                        {: # more Js evaluable params... :}
+                                     },                                                                 
+                          },
+                            {: # more events... :}
+                        ]
+                "
+               )    
+    :}       
+
+=head1 DESCRIPTION
+ 
+Create a connection (Ajax) to send data and retrieve answer using XMLHttpRequest.
+In this way we can update page content without reload or refresh it.
+
+Alternatively you can make pseudo-Ajax Cross-domain requests on Js files, see 
+js_file parameter.
+
+Live sample: L<http://nes.sourceforge.net/miniblog/en/?action=item&item=Ajax>
+
+=head1 PARAMETERS
+
+=over 2
+
+=item script
+ 
+The Js script to embedded in object. Default none.
+
+=item script_tpl
+ 
+Nes template file which Js script to embedded in object. Default none.
+
+=item lparam/vparam
+
+The first group of lparam/vparam are assigned to all connections.
+
+=item lparam
+
+Parameter to pass in GET or POST Ajax, is a literal value, does not interpreted 
+by JavaScript:
+
+    param_name => 'literal value',
+   
+=item vparam
+
+Parameter to pass in GET or POST Ajax, interpreted by JavaScript:
+
+    param_name => 'document.myform.myfield_name.value'
+
+=item events
+
+JavaScript events to active Ajax connection. Supports multiple connections 
+in multiple events.
+
+=back
+
+=head1 EVENTS PARAMETERS
+
+=over 2
+
+=item open
+
+URL for POST or GET Ajax connection 
+
+=item method
+
+'POST'(default) or 'GET'
+
+=item synchro
+
+Connection in Synchronous mode true 1 or false 0.
+Default 'false' (connection in Asynchronous mode).
+
+=item event
+
+JavaScript event to active Ajax connection.
+
+=item by
+
+We can get the element you set the event by: 'collection', 'name', 'tag' or 
+'id'. 'collection' is Js collection object, 'name' is a name property of 
+element, 'tag' is a HTML Tag name, 'id' is ID property of element.
+
+In 'collection' requires 'item' for get specific item.
+
+=item idname
+
+The name or id (defined in 'by') of the element to set event:
+
+Set event onClick to field "user":
+
+    event     => 'onClick', 
+    by        => 'name',
+    idname    => 'user',
+    ...
+
+Set event onClick to radio "colors" item 1:
+
+    event     => 'onClick', 
+    by        => 'collection',
+    item      => '[1]',
+    idname    => 'colors',
+    ...
+
+
+Set event onUnload to Tag <body>:
+
+    event     => 'onUnload', 
+    by        => 'tag',
+    idname    => 'body',
+    ...
+
+Set event onSubmit to form ID 'myform':
+
+    event     => 'onSubmit', 
+    by        => 'id',
+    idname    => 'myform',
+    ...
+
+=item preload
+
+Javascript name function (without parentheses) to be processed when ajax request 
+begins. Receives as parameter the ajax connection, and the previous ajax 
+connection. This function can be defined in another part of the page, in a Js 
+file or a Js utility. You can also use the parameter 'script' or 'script_tpl' 
+to define it:
+
+    preload   => 'mypreload'
+    
+Call to JavaScript function: mypreload(conex, previous_conex)
+
+    function myafterload (conex, previous_conex) { 
+        previous_conex.abort();
+        alert('preload');
+    }
+
+=item afterload
+
+Javascript function (without parentheses) to be processed when ajax ends.
+Receives as parameter the ajax connection, and the previous ajax 
+connection. This function can be defined in another part of the page, in a Js 
+file or a Js utility. You can also use the parameter 'script' or 'script_tpl' 
+to define it:
+
+    afterload   => 'myafterload'
+    
+Call to JavaScript function: myafterload(conex, previous_conex)
+
+Sample function:
+
+    function myafterload (conex, previous_conex) { 
+        alert(conex.responseText);
+    }
+
+=item header_...
+
+By default it sends the 'Content-Type' as:
+
+    'header_Content-Type' => 'application/x-www-form-urlencoded',
+
+You can set this or another header in the format:
+
+    'header_HEADER-NAME' => 'VALUE',
+
+* attention to the quotes.
+
+=item lparam/vparam
+
+This group of lparam/vparam are assigned in each event.
+
+=item lparam
+
+Parameter to pass in GET or POST Ajax, is a literal value, does not interpreted 
+by JavaScript:
+
+    param_name => 'literal value',
+   
+=item vparam
+
+Parameter to pass in GET or POST Ajax, interpreted by JavaScript:
+
+    param_name1 => 'myform.myfield_name.value'
+
+=item js_file
+
+if set js_file to 1, emulate AJAX requests on a JS file. Can be only GETs on 
+js files, the parameter 'method' is not requires. JS file can be generated 
+with Nes (njs files). Its only advantage is that you can do cross domain:
+
+    js_file   => 1,
+    open      => 'http://any-domain/file.js',
+    event     => 'onclick', 
+    by        => 'id',
+    idname    => 'the_id',
+    preload   => 'js_function_name',
+    afterload => 'js_function_name',
+    vparam    => ...
+    ...
+
+=back
+
+=head1 AUTHOR
+
+Luis Romero del Campo. (Aunque ha tirado muchas veces la pelota...)
+
+=head1 VERSION
+
+Version 1.04
+
+=head1 COPYRIGHT
+
+Copyright (c) Luis Romero del Campo. All rights reserved.
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it
+and/or modify it under the same terms and conditions as
+GNU Public License (GPL).
+
+This means that you can, at your option, redistribute it and/or 
+modify it under either the terms the GNU Public License (GPL), 
+or under the Perl Artistic License.
+
+See http://dev.perl.org/licenses/
+
+=head1 DISCLAIMER
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE.
+
+Use of this software in any way or in any form, source or binary,
+is not allowed in any country which prohibits disclaimers of any
+implied warranties of merchantability or fitness for a particular
+purpose or any disclaimers of a similar nature.
+
+IN NO EVENT SHALL I BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+SPECIAL, INCIDENTAL,  OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE
+USE OF THIS SOFTWARE AND ITS DOCUMENTATION (INCLUDING, BUT NOT
+LIMITED TO, LOST PROFITS) EVEN IF I HAVE BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE
+
+=head1 SEE ALSO
+
+L<Nes>, L<Nes::Tutorial>, L<Nes::nes.cfg>, 
+Sample to use Nes; L<http://nes.sourceforge.net/>
+
+=cut
+
+
+

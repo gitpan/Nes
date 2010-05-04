@@ -26,6 +26,7 @@ lib/Nes/Obj/go_language.pod
 lib/Nes/Obj/location.pod
 lib/Nes/Obj/lwp.pod
 lib/Nes/Obj/session.pod
+lib/Nes/Obj/ajax.pod
 lib/Nes/Plugin/API.pod
 lib/Nes/Plugin/clean.pod
 lib/Nes/Plugin/debug_info.pod
@@ -175,12 +176,15 @@ share/examples/nesblog/en/items/Help.nhtml
 'share/examples/nesblog/en/items/Include PHP and others.nhtml'
 share/examples/nesblog/en/items/Installation.nhtml
 share/examples/nesblog/en/items/Nes-1.00.nhtml
+share/examples/nesblog/en/items/Nes-1.04.nhtml
+share/examples/nesblog/en/items/Diagrams.nhtml
 share/examples/nesblog/en/items/Singleton.nhtml
 'share/examples/nesblog/en/items/Nes configuration file.nhtml'
 share/examples/nesblog/en/items.nhtml
 share/examples/nesblog/en/items/Security.nhtml
 share/examples/nesblog/en/items/Sessions.nhtml
 share/examples/nesblog/en/items/Tutorial.nhtml
+share/examples/nesblog/en/items/ajax.nhtml
 share/examples/nesblog/en/latest_articles.nhtml
 share/examples/nesblog/en/latest_comments.nhtml
 share/examples/nesblog/en/login.nhtml
@@ -213,6 +217,7 @@ share/examples/nesblog/es/items/Instalación.nhtml
 'share/examples/nesblog/es/items/Logo de nes.nhtml'
 share/examples/nesblog/es/items/mod_perl.nhtml
 share/examples/nesblog/es/items/Nes-1.00.nhtml
+share/examples/nesblog/es/items/Nes-1.04.nhtml
 'share/examples/nesblog/es/items/Nes como Wrapper.nhtml'
 'share/examples/nesblog/es/items/Nes Tags.nhtml'
 share/examples/nesblog/es/items.nhtml
@@ -266,6 +271,9 @@ share/examples/nesblog/scripts/examples/python.py
 share/examples/nesblog/scripts/examples/solo_html.html
 share/examples/nesblog/scripts/examples/suerte.cgi
 share/examples/nesblog/scripts/examples/suerte.html
+share/examples/nesblog/scripts/examples/rajax.pl
+share/examples/nesblog/scripts/examples/rajax.njs
+share/examples/nesblog/scripts/examples/rajax.nhtml
 share/examples/nesblog/scripts/.htaccess
 share/examples/nesblog/scripts/index.cgi
 share/examples/nesblog/scripts/items.cgi

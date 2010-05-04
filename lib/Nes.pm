@@ -28,8 +28,7 @@ use strict;
 # cgi environment no defined in command line
 no warnings 'uninitialized';
 
-
-our $VERSION          = '1.03.3_1';
+our $VERSION          = '1.03.3_2';
 our $CRLF             = "\015\012";
 our $MAX_INTERACTIONS = 900;
 our $MAX_SCRIPTS      = 900;
@@ -1772,7 +1771,7 @@ use Nes::Singleton;
     my $cline       = $self->{'CFG'}{'php_cline'};
     $cline          = $self->{'CFG'}{'php_cgi_cline'} if $self->{'php_wrapper'};
     
-    warn "Not Found: ".$cline if !-e $cline;
+#    warn "Not Found: ".$cline if !-e $cline;
 
     if ( $self->{'php_wrapper'} || $MOD_PERL ) {    
       # por seguridad 
@@ -1920,7 +1919,7 @@ use Nes::Singleton;
     my $cline = $self->{'CFG'}{'python_cline'};
     my @command = ( $cline );
     
-    warn "Not Found: ".$cline if !-e $cline;
+#    warn "Not Found: ".$cline if !-e $cline;
 
     if ( $MOD_PERL ) {
       

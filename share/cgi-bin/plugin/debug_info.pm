@@ -38,6 +38,8 @@ use Benchmark qw(:all :hireswallclock);
     my $self   = $instance || $class->SUPER::new();
     my ($template) = @_;
     
+#    $self->{'session'} = nes_session->new('NES-DEBUG-INFO');
+    
     $self->{'inter'} = $template->{'this_inter'}; 
     $self->{'first_time'} = 1;
     $self->init($template) if !$instance;
@@ -134,7 +136,7 @@ use Benchmark qw(:all :hireswallclock);
     my $self = shift;
     my $out  = '';
 
-    my $img_error = '<img title="Eror" src="http://'.$ENV{'SERVER_NAME'}.$self->{'CFG'}->{'img_dir'}.'/error_i.gif">';
+    my $img_error = '<img title="Error" src="http://'.$ENV{'SERVER_NAME'}.$self->{'CFG'}->{'img_dir'}.'/error_i.gif">';
     my $img_warn  = '<img title="Warning" src="http://'.$ENV{'SERVER_NAME'}.$self->{'CFG'}->{'img_dir'}.'/error_b_i_s.gif">';
       
     my $last_inter = @{$self->{'tree'}};

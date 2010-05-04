@@ -33,7 +33,7 @@ With Nes you can NOT:
 
 To do these things, there is already a system called PHP. :-)
 
-Nes Model:
+Nes Callback:
 
     .----------------------------------------------.
     |                 | Nes Object |               |
@@ -82,9 +82,9 @@ Nes Data Flow:
 
 =item Simplicity
 
-Nes has only ten Tags to include in the HTML, and a single object with a 
-single method to instantiate in Perl. You can start working with Nes in 
-hours, not weeks or months as in other systems.
+Nes has only ten Tags to include in the HTML, and a single object to 
+instantiate in Perl. You can start working with Nes in hours, not weeks 
+or months as in other systems.
 
 =item Security
 
@@ -103,7 +103,7 @@ different from other systems.
 
 Full Debug for templates, customizable through templates Nes.
 
-Live sample: L<http://nes.sourceforge.net/hello_nes/tests/index.nhtml>
+Live sample: L<http://nes.sourceforge.net/hello_nes/tests/?action=others>
 
 =item HTML oriented
 
