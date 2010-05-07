@@ -1,6 +1,6 @@
 
-DirectoryIndex index.nhtml index.nhtm index.html index.htm
-
+DirectoryIndex index.cgi index.pl index.nhtm index.html index.htm 
+ 
 # ---------- Nes configuration --------------
 # exec cgis
 Options +ExecCGI
@@ -9,25 +9,14 @@ AddHandler cgi-script .cgi .pl
 # Nes nhtml files
 AddHandler perl-nes .nhtml
 AddHandler perl-nes .nhtm
-
-# NSJ files
-AddHandler perl-nes .njs
-
-# HTML Wrapper
-AddHandler perl-nes .html
-AddHandler perl-nes .htm
   
 # nes dispatcher
 Action perl-nes /cgi-bin/nes/dispatch.cgi
 
 # protected Nes configuration and other files
-<FilesMatch \.(nsql|nes.cfg|pm)$>
+<FilesMatch \.(nsql|nes.cfg)$>
   order deny,allow
   deny from all
 </FilesMatch>
 #---------------------------------------------
- 
-
-
-
 
